@@ -1,0 +1,51 @@
+baseurl = ""
+languageCode = "en-us"
+Title = "Jeff Weber's Blog"
+# Copyright notice. This is displayer in the footer.
+copyright = "&copy; Copyright notice"
+theme = "pickles"
+
+[params]
+  paginate = 10
+  # Social accounts. Link to these accounts are displayed in the header and
+  # footer
+  twitter = "fursher"
+  facebook = ""
+  instagram = ""
+  googleplus = "" # https://plus.google.com/u/0/xxxxxx
+  github = "jbweber"
+  gitlab = ""
+  npm = ""
+  codepen = ""
+  dribbble = ""
+  fivehundredpx = "" # 500px
+  flickr = ""
+  pinterest = ""
+  tumblr = ""
+  vimeo = ""
+  youtube = ""
+  linkedin = ""
+  # Disqus shortname
+  disqus = ""
+  # Google Analytics API key.
+  ga_api_key = "Your Google Analytics tracking id"
+  author = ""
+  authorwebsite = "blog.cofront.xyz"
+  avatar = ""
+  contact = ""
+  bio = ""
+  # Short subtitle/tagline. This is displayed in the header.
+  subtitle = ""
+  # Logo image. This is displayed ogp image.
+  logo = ""
+  favicon = ""
+
+[[menu.main]]
+    name = "Blog"
+    url = "/"
+    weight = 1
+
+[[menu.main]]
+    name = "About"
+    url = "/about"
+    weight = 2
