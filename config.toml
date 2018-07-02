@@ -1,8 +1,8 @@
-baseurl = ""
+baseurl = "https://blog.cofront.xyz/"
 languageCode = "en-us"
 Title = "Jeff Weber's Blog"
 # Copyright notice. This is displayer in the footer.
-copyright = "&copy; Copyright notice"
+copyright = "&copy; Jeff Weber 2018"
 theme = "pickles"
 
 [params]
