@@ -3,35 +3,39 @@ title: "Building a DNS Load Balancer"
 date: 2018-05-13T00:00:00-04:00
 ---
 
-After my last post on things to consider with DNS based load balancing I had been thinking about that problem in more detail. In the work setting we replaced the custom solution I described with a new service offering based on one of the commercial GLB products. While it's working without issues and removed some complexity from my life, I've been thinking about how I might be a GLB solution because why not right? In this post I'm going to walk through my thoughts on how I might design a solution like this from a high level and maybe if I get really ambitious I'll try to actually implement it.
+After my last post on things to consider with DNS based load balancing I had been thinking about that problem in more detail. In the work setting we replaced the custom solution I described with a new service offering based on one of the commercial GLB products. While it's working without issues and removed some complexity from our deployment, I've been thinking about how building my own GLB solution because why not right? In this post I'm going to start walking through the design process for a solution like this from a high level.
 
-I'm not a classically trained programmer (we can describe it that way right?) and I've learned most of what I know doing real world projects. This means generally when I start putting together a solution I like to compose it from as many existing battle tested components as possible. Based on that I to craft a list of requirements and then make a list of possible software which could be used to compose a solution so we can minimize the amount of custom code which needs to be written.
+I'm not a classically trained programmer (we can describe it that way right?) and I've learned most of what I know doing real world projects. This means generally when I start putting together a solution I like to compose it from as many existing battle tested components as possible. Based on that I like to craft a list of requirements and then make a list of possible software which could be used to compose a solution to minimize the amount of custom code which needs to be written.
 
 ## Requirements List
 
-The requirements list I've included below at first glance looks pretty simple since it's so short. In reality though the problems on the list represent some pretty complex stuff and there are a lot of vendors out there making a lot of money solving this problem.
+The requirements list I've included below at first glance looks pretty simple since it's so short. In reality though the problems on the list represent some pretty complex stuff and there are a lot of commercial vendors out there making a lot of money solving the GLB problem so it must not be as easy as it seems right?
 
-* Respond to DNS queries with the results being based the health of a service
-* The content of results should change based on health changes in as close to real time as possible
-* The configuration should be API driven
-* Resilient to individual component failure
-* Resilient to datacenter failure
-* Resilient to maintenance events
+* Must be able to respond to DNS queries with results reflecting service health
+* Results should reflect service health in as close to real time as possible
+* Configuration should be API driven
+* System should be resilient to individual component failure
+* System should be resilient to data center failure
+* System should be resilient to maintenance events
 
-## Resiliently Respond to DNS Queries
+## Responding to DNS Queries
 
-When investigating how to resiliently respond to DNS queries we're pretty lucky because the patterns used to solve these problems are widely known and battle tested at scale. First you pick the DNS server software and second you make multiple instances of it available using a technique called "anycast". Depending on the scope of your implementation (Internet scope versus Intranet scope) there are some implementation details to consider with respect to "anycast", but in general the idea has been written about quite a bit and just works.
+While the DNS protocol seems simple it is notoriously complex. As you research what it might take to implement a conforming server you will find there are 40+ RFCs describing the spec and quite a few hacky ways software deals with bugs or incorrectly formatted queries to keep the internet alive. Luckily there are a large number of high quality open source DNS server implementations that are widely known and battle tested at scale.
+
+There is also a widely used technique for ensuring resiliency of DNS resolvers typically called "Anycast DNS". With an appropriate software selection and some network configuration we should be able to easily make our DNS infrastructure resilient. Depending on the deployment scale (Internet scope versus Intranet scope) there are some implementation details to consider with respect to anycast, but in general the idea has been written about quite a bit and just works.
 
 ### DNS Software
 
- Really the hard part of this is choosing appropriate DNS software as there are a lot of options which have different tradeoffs. I've created a list of some candidate DNS server software below, and I've also included an option for writing our own software using the very complete DNS library for golang. This list is not exhaustive so if you know of an option which may fit our criteria better let me know and I'll update the post.
+ The difficult part of choosing appropriate DNS software is that there are a lot of high quality options which see extensive use in the real world, but have various tradeoffs. I've created a list of some candidate DNS server software below, and I've also included an option for writing our own software using the very complete DNS library for Go [miekg/dns](https://github.com/miekg/dns). This list is not exhaustive so if you know of an option which may fit our criteria better let me know and I'll update the post.
 
 * Bind
 * PowerDNS
 * CoreDNS
-* Go DNS Bindings
+* Custom - based on miekg/dns library in Go
 
-Ultimately for this project I think I would use PowerDNS. It's a widely used open source DNS implementation which has been around for quite a while, and most importantly it has both an API for configuration as well as being able to store its configuration in a database. While Bind has been around forever and has a good reputation unless something has changed recently it doesn't have an API other than possibly using nsupdate, and it's configuration is file based by default. The CoreDNS project is a fairly new entry to the space and it is lead by the same developer who created the golang DNS bindings. While it also seems to check off most of the requirements that PowerDNS does, my familiarity with PowerDNS and its long history give it the win here. I ruled out writing my own DNS server on principal, because while it may seem like it would be an easy thing to do realistically it's a very complex undertaking and the time spent there could be better spent in other areas of the project.
+To skip right to a selection, for this project I think I would use PowerDNS. It's a widely used open source DNS implementation which has been around for quite a while, and most importantly it has both an API for configuration as well as being able to store its configuration in a database. I've also got extensive experience using it to build an authoritative DNS implementation. While Bind has been around forever and is widely used, unless something has changed recently it doesn't have an API, and it's configuration is file based by default. The CoreDNS project is a fairly new entry to the space and it is lead by the same developer who created the miekg/dns library in Go. While it is seeing use in the Kubernetes project and also seems to check off most of the requirements that PowerDNS does, my familiarity with PowerDNS and its long history give it the win here.
+
+While I included an option to write our own DNS server I mostly wanted to use it as a talking point for avoiding uneeded complexity. Even with the complete library code there is a lot more that needs to go into implementing an authoritative DNS server, and as we discussed before that is a very complex undertaking. Wouldn't it be better to use something battle tested for this part of the project, and spend the time saved elsewhere?
 
 An interesting question to answer for PowerDNS will be what configuration mode we want to run it in, and what backing database we'll use to store state. Running in a mode where DNS updates come into a primary server and then are propagated to secondary nodes using AXFR / IXFR using sqlite for storage, or running in a mode where all instances of PowerDNS can receive updates and queries go real time to a shared database for state. In the past I've used the first option, but an issue I've experienced is that the real time update in the event of a health change is lacking because updates are eventually consistent. With some tuning I was able to create a configuration with an SLO of ~60 seconds, but for some services this may not be good enough. 
 
@@ -39,7 +43,7 @@ For this project I would like to explore running PowerDNS in native mode which m
 
 ### Anycast
 
-I'm actually going to gloss over the anycast portion of the discussion a bit, because it may not even be needed depending on the scope of deployment of the product. Instead I'll probably write another blog post about how I've implemented an anycast DNS service in the past two different ways. I've included some links below which describe anycast in a bit more detail so you can get an idea of how it might work.
+I'm actually going to skip over the anycast portion of the discussion, because it may not even be needed depending on the scope of deployment (for building something as a prototype it is definitely not needed). Instead I'll probably write another blog post about how I've implemented an anycast DNS service in the past two different ways. I've included some links below which describe anycast in a bit more detail so you can get an idea of how it might work.
 
 * [Wikipedia Anycast Article](https://en.wikipedia.org/wiki/Anycast)
 * [Cloudflare Article](https://www.cloudflare.com/learning/cdn/glossary/anycast-network/)
