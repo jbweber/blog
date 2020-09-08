@@ -1,18 +1,21 @@
 baseurl = "https://blog.cofront.xyz/"
 languageCode = "en-us"
-Title = "Jeff Weber's Blog"
+title = "Jeff Weber's Blog"
 # Copyright notice. This is displayer in the footer.
-copyright = "&copy; Jeff Weber 2018"
-theme = "pickles"
+copyright = "&copy; Jeff Weber"
+theme = "hugo_theme_pickles"
+
+# Google Analytics API key.
+googleAnalytics = "UA-177352655-1"
 
 [params]
   paginate = 10
+  custom_css = []
   # Social accounts. Link to these accounts are displayed in the header and
   # footer
   twitter = "fursher"
   facebook = ""
   instagram = ""
-  googleplus = "" # https://plus.google.com/u/0/xxxxxx
   github = "jbweber"
   gitlab = ""
   npm = ""
@@ -25,11 +28,11 @@ theme = "pickles"
   vimeo = ""
   youtube = ""
   linkedin = ""
+  medium = ""
+  strava = ""
   # Disqus shortname
   disqus = ""
-  # Google Analytics API key.
-  ga_api_key = "Your Google Analytics tracking id"
-  author = ""
+  author = "Jeff Weber"
   authorwebsite = "blog.cofront.xyz"
   avatar = ""
   contact = ""
