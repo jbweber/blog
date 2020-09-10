@@ -19,16 +19,15 @@ As previously stated the main requirement here is to determine a way to limit
 the times my systems need to reach out to the internet for operating system
 content. Below is a simple list of goals for the solution.
 
-* Minimize the amount of times content is directly downloade from the internet
+* Minimize the amount of times content is directly downloaded from the internet
 * Support os install and package install for CentOS and Fedora
 * Minimize operating system configuration changes needed to use the solution
 
 ## Brainstorming
 
-Based on past experience along with some quick internet searches, there are
-quite a few ways to solve this problem. I settled on three different choices
-based on my research and I've outlined them below along with what I think their
-pluses and minuses are.
+Based on experience along with some quick internet research, there are quite
+a few ways to solve this problem. I settled on three different options, and I've
+outlined them below along with some perceived pluses and minuses.
 
 ### Local Content Mirror
 
@@ -47,21 +46,21 @@ create a local install mirror which look straight forward.
 #### Minuses
 
 * operating system needs reconfigured to support local mirror
-* need to build a solution for when / how to resync
+* need to build a solution for when / how to resynchronize
 * full mirror includes a lot of content you may never used
 * full mirror uses a lot of disk space (driven by content you never use)
 
 ### Reverse Proxy + Cache
 
-The second option is a reimagining of the first option to try and solve some of
+The second option is a reimagining of the first option to try to solve some of
 it's perceived minuses.
 
 Instead of creating a full local mirror you could configure a reverse proxy to
-an upstream{s}. Along with creating this reverse proxy if a cache was
-implemented files would only need to be directly downloaded the first time
-they're used and then would be served from cache on subsequent uses. This means
-we would only locally cache the files we used, but the rest of the content would
-be available "Just In Time" from the upstream.
+an upstream{s}. Along with creating this reverse proxy adding the cache means
+files would only need to be directly downloaded the first time they're used and
+then would be served from cache on subsequent uses. This means we would only
+locally cache the files we used, but the rest of the content would be available
+"Just In Time" from the upstream.
 
 #### Pluses
 
@@ -81,10 +80,10 @@ be available "Just In Time" from the upstream.
 
 ### Forward Proxy + Cache
 
-The third option is a transformation of the second option to try and solve some
-it's perceived minuses.
+The third option is a transformation of the second option to try to solve some
+of it's perceived minuses.
 
-While it's a bigger jump from a usage standpoing to go from using a reverse
+While it's a bigger jump from a usage standpoint to go from using a reverse
 proxy to a forward proxy, a lot of the downsides seem to disappear. Adding a
 global proxy configuration to the OS package manage is straight forward, and
 a lot of the questions in complexity related to upstream resiliency go away.
@@ -100,8 +99,7 @@ build the solution.
 
 #### Minuses
 
-* the same content pulled from multiple mirrors might be treated as different
-  files
+* the cache may treat content from different upstream mirrors as different files 
 * some files are special and may not be something we want to cache (e.g.
   repomd.xml)
 
