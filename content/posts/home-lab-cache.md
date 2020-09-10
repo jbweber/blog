@@ -1,7 +1,6 @@
 ---
 title: "Home Lab Cache"
 date: 2020-09-08T14:09:40-04:00
-draft: true
 ---
 
 I use my home lab environment to create and destroy virtual machines on a fairly
