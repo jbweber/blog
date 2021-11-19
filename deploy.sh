@@ -4,8 +4,15 @@ set -eo pipefail
 
 printf "\033[0;32mdeploying updates...\033[0m\n"
 
+git submodule update --init --recursive
+
+pushd public
+git checkout master
+popd
+
 hugo
-cd public
+
+pushd public
 git add .
 msg="rebuilding site $(date)"
 if [ -n "$*" ]; then
@@ -13,3 +20,4 @@ if [ -n "$*" ]; then
 fi
 git commit -m "$msg"
 git push origin master
+popd
